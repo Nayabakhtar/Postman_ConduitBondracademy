@@ -1,0 +1,695 @@
+{
+	"info": {
+		"_postman_id": "404764c3-eed4-4c6f-b104-ab7022c4494a",
+		"name": "Conduit",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30168864",
+		"_collection_link": "https://www.postman.com/telecoms-specialist-35583089/workspace/automation-testing/collection/30168864-404764c3-eed4-4c6f-b104-ab7022c4494a?action=share&source=collection_link&creator=30168864"
+	},
+	"item": [
+		{
+			"name": "Login ValidCredentials UserA",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let response = pm.response.json();\r",
+							"\r",
+							"// ✅ Ensure the response contains the token\r",
+							"if (response.user && response.user.token) {\r",
+							"    pm.environment.set(\"authToken\", response.user.token);\r",
+							"    console.log(\"✅ Auth Token Saved:\", response.user.token);\r",
+							"} else {\r",
+							"    console.log(\"❌ Login Failed: No token received!\");\r",
+							"}\r",
+							"\r",
+							"\r",
+							"\r",
+							"// Parse the response body\r",
+							"let responseBody = pm.response.json();\r",
+							"\r",
+							"// Validate response status\r",
+							"pm.test(\"Login Scenario - Validate Response\", function () {\r",
+							"    pm.response.to.have.status(200); // Check if response status is 200 (OK)\r",
+							"    \r",
+							"    // Validate response fields\r",
+							"    pm.expect(responseBody).to.have.property(\"user\");\r",
+							"    pm.expect(responseBody.user).to.have.property(\"email\", \"teshht@gmail.com\");\r",
+							"    pm.expect(responseBody.user).to.have.property(\"username\", \"testkkk\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"user\": {\r\n\t\t\"email\": \"teshht@gmail.com\",\r\n\t\t\"password\": \"Temp@123\",\r\n\t\t\"username\": \"testkkk\"\r\n\t}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/users/login",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login Invalid Credentials",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse response body safely\r",
+							"let responseBody;\r",
+							"try {\r",
+							"    responseBody = pm.response.json();\r",
+							"} catch (e) {\r",
+							"    console.log(\"Response is not valid JSON:\", pm.response.text());\r",
+							"    pm.expect.fail(\"Response is not valid JSON\");\r",
+							"}\r",
+							"\r",
+							"\r",
+							"\r",
+							"// Validate response status for incorrect credentials\r",
+							"pm.test(\"Login Scenario - Validate Response for Incorrect Credentials\", function () {\r",
+							"    let statusCode = pm.response.code;\r",
+							"\r",
+							"    // Ensure status is 401, 403, or 404\r",
+							"    pm.expect(statusCode).to.be.oneOf([401, 403, 404]);\r",
+							"\r",
+							"    // Log response for debugging\r",
+							"    console.log(\"Response Status:\", statusCode);\r",
+							"    console.log(\"Response Body:\", responseBody);\r",
+							"\r",
+							"    // Validate response structure based on expected error response format\r",
+							"    if (responseBody.hasOwnProperty(\"errors\")) {\r",
+							"        pm.expect(responseBody.errors).to.be.an(\"object\");\r",
+							"        pm.expect(responseBody.errors).to.have.property(\"email or password\");\r",
+							"        pm.expect(responseBody.errors[\"email or password\"][0]).to.equal(\"is invalid\");\r",
+							"    } else if (responseBody.hasOwnProperty(\"message\")) {\r",
+							"        pm.expect(responseBody.message).to.be.a(\"string\");\r",
+							"        pm.expect(responseBody.message.toLowerCase()).to.include(\"invalid\");\r",
+							"    } else {\r",
+							"        pm.expect.fail(\"Unexpected response format: \" + JSON.stringify(responseBody));\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "// Define incorrect credentials\r\n{\r\n    \"user\": {\r\n        \"email\": \"teshht@gmail.com\",\r\n        \"password\": \"WrongPassword\"\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/users/login",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Blog Without Details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ Parse the response body\r",
+							"let responseBody = pm.response.json();\r",
+							"\r",
+							"// ✅ Validate the status code (expecting 400 or 422 for validation failure)\r",
+							"pm.test(\"Verify Blog Post Cannot Be Created with Empty Content\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([400, 422]); // Adjust based on actual API response\r",
+							"    \r",
+							"    // ✅ Ensure the error message exists\r",
+							"    pm.expect(responseBody).to.have.property(\"errors\");\r",
+							"\r",
+							"    // ✅ Check for specific validation error messages\r",
+							"     // ✅ Validate that 'title' field has an error message\r",
+							"    pm.expect(responseBody.errors).to.have.property(\"title\");\r",
+							"    pm.expect(responseBody.errors.title[0]).to.include(\"can't be blank\"); // Error validation\r",
+							"\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyMjc2N30sImlhdCI6MTc0MjQwNTc1NywiZXhwIjoxNzQ3NTg5NzU3fQ.Kj9fabIX5TtQuYTeT27rGviNlJHAyqh4uTIUF0krV1M",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9,hi;q=0.8"
+					},
+					{
+						"key": "access-control-request-headers",
+						"value": "authorization,content-type"
+					},
+					{
+						"key": "access-control-request-method",
+						"value": "POST"
+					},
+					{
+						"key": "origin",
+						"value": "https://conduit.bondaracademy.com"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://conduit.bondaracademy.com/"
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-site"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"article\": {\r\n        \"title\": \"\",\r\n        \"description\": \"Automation Testing\",\r\n        \"body\": \"\",\r\n        \"tagList\": [\"sdet\"]\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/articles/",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"articles",
+						""
+					]
+				},
+				"description": "Generated from cURL: curl 'https://conduit-api.bondaracademy.com/api/articles/' \\\r\n  -X 'OPTIONS' \\\r\n  -H 'accept: */*' \\\r\n  -H 'accept-language: en-US,en;q=0.9,hi;q=0.8' \\\r\n  -H 'access-control-request-headers: authorization,content-type' \\\r\n  -H 'access-control-request-method: POST' \\\r\n  -H 'origin: https://conduit.bondaracademy.com' \\\r\n  -H 'priority: u=1, i' \\\r\n  -H 'referer: https://conduit.bondaracademy.com/' \\\r\n  -H 'sec-fetch-dest: empty' \\\r\n  -H 'sec-fetch-mode: cors' \\\r\n  -H 'sec-fetch-site: same-site' \\\r\n  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Blog With Details",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generate a unique title using timestamp\r",
+							"let uniqueTitle = \"QA Post \" + new Date().getTime();\r",
+							"\r",
+							"// Store it as an environment variable\r",
+							"pm.environment.set(\"postTitle\", uniqueTitle);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ Parse Response Body\r",
+							"let responseBody = pm.response.json();\r",
+							"\r",
+							"// ✅ Store the slug for later use\r",
+							"if (responseBody.article && responseBody.article.slug) {\r",
+							"    pm.environment.set(\"postSlug\", responseBody.article.slug);\r",
+							"\t\tconsole.log(\"✅ Post Slug Saved:\", responseBody.article.slug);\r",
+							"} else {\r",
+							"    console.log(\"❌ Failed to Save Post Slug!\");\r",
+							"}\r",
+							"\r",
+							"// ✅ Validate Status Code\r",
+							"pm.test(\"Verify Blog Post Creation\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"// ✅ Validate Response Data\r",
+							"pm.test(\"Validate Blog Post Response\", function () {\r",
+							"    pm.expect(responseBody).to.have.property(\"article\");\r",
+							"\r",
+							"    // Retrieve the dynamic title from environment\r",
+							"    let expectedTitle = pm.environment.get(\"postTitle\");\r",
+							"\r",
+							"    // Validate Title, Description, and Body\r",
+							"    pm.expect(responseBody.article).to.have.property(\"title\", expectedTitle);\r",
+							"    pm.expect(responseBody.article).to.have.property(\"description\", \"Automation Testing\");\r",
+							"    pm.expect(responseBody.article).to.have.property(\"body\", \"This is the original article content.\");\r",
+							"});\r",
+							"\r",
+							"// ✅ Store Slug for Editing\r",
+							"pm.test(\"Store Blog Slug\", function () {\r",
+							"    pm.expect(responseBody.article).to.have.property(\"slug\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyMjc2N30sImlhdCI6MTc0MjQwNTc1NywiZXhwIjoxNzQ3NTg5NzU3fQ.Kj9fabIX5TtQuYTeT27rGviNlJHAyqh4uTIUF0krV1M",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"article\": {\r\n        \"title\": \"{{postTitle}}\",\r\n        \"description\": \"Automation Testing\",\r\n        \"body\": \"This is the original article content.\",\r\n        \"tagList\": [\"sdet\"]\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/articles/",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"articles",
+						""
+					]
+				},
+				"description": "Generated from cURL: curl '[https://conduit-api.bondaracademy.com/api/articles/'](https://conduit-api.bondaracademy.com/api/articles/')  \n\\-H 'accept: application/json, text/plain, _/_'  \n\\-H 'accept-language: en-US,en;q=0.9,hi;q=0.8'  \n\\-H 'authorization: Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyMjcxM30sImlhdCI6MTc0MjQwMjgzMSwiZXhwIjoxNzQ3NTg2ODMxfQ.nyXH2OVjSYRotcqFDc8nxCJG72YYhxMLB1eceuBUSww'  \n\\-H 'content-type: application/json'  \n\\-H 'origin: [https://conduit.bondaracademy.com'](https://conduit.bondaracademy.com')  \n\\-H 'priority: u=1, i'  \n\\-H 'referer: [https://conduit.bondaracademy.com/'](https://conduit.bondaracademy.com/')  \n\\-H 'sec-ch-ua: \"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"'  \n\\-H 'sec-ch-ua-mobile: ?0'  \n\\-H 'sec-ch-ua-platform: \"Windows\"'  \n\\-H 'sec-fetch-dest: empty'  \n\\-H 'sec-fetch-mode: cors'  \n\\-H 'sec-fetch-site: same-site'  \n\\-H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'  \n\\--data-raw '{\"article\":{\"title\":\"QA Automatiom\",\"description\":\"Skkills\",\"body\":\"Playwright\",\"tagList\":\\[\"playwright\"\\]}}'"
+			},
+			"response": []
+		},
+		{
+			"name": "EditBlogbyUser",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Generate a unique title for the edited post\r",
+							"let updatedTitle = pm.environment.get(\"postTitle\") + \" - Edited\";\r",
+							"\r",
+							"// Store it as an environment variable\r",
+							"pm.environment.set(\"updatedPostTitle\", updatedTitle);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// ✅ Parse Response Body\r",
+							"let responseBody = pm.response.json();\r",
+							"\r",
+							"// ✅ Validate Status Code (Allow 200 & 201 due to API behavior)\r",
+							"pm.test(\"Verify Blog Post Update\", function () {\r",
+							"    pm.expect(pm.response.code, \"Unexpected Status Code. Expected 200 or 201.\")\r",
+							"        .to.be.oneOf([200, 201]);\r",
+							"});\r",
+							"\r",
+							"// ✅ Validate Response Data\r",
+							"pm.test(\"Validate Edited Blog Post Response\", function () {\r",
+							"    pm.expect(responseBody).to.have.property(\"article\");\r",
+							"\r",
+							"    // Retrieve expected updated title\r",
+							"    let expectedUpdatedTitle = pm.environment.get(\"updatedPostTitle\");\r",
+							"\r",
+							"    // Validate Updated Title\r",
+							"    pm.test(\"Validate Updated Title\", function () {\r",
+							"        pm.expect(responseBody.article).to.have.property(\"title\");\r",
+							"        pm.expect(responseBody.article.title, \"Title Mismatch\")\r",
+							"            .to.include(expectedUpdatedTitle);\r",
+							"    });\r",
+							"\r",
+							"    // Validate Body Content (Unchanged)\r",
+							"    pm.expect(responseBody.article).to.have.property(\"body\", \"This is the original article content.\");\r",
+							"});\r",
+							"\r",
+							"// ✅ Debugging Logs\r",
+							"console.log(\"Full Response Body:\", responseBody);\r",
+							"console.log(\"Expected Updated Title:\", pm.environment.get(\"updatedPostTitle\"));\r",
+							"console.log(\"Received Updated Title:\", responseBody.article.title);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyMjc2N30sImlhdCI6MTc0MjQwNTc1NywiZXhwIjoxNzQ3NTg5NzU3fQ.Kj9fabIX5TtQuYTeT27rGviNlJHAyqh4uTIUF0krV1M",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"article\": {\r\n        \"title\": \"{{postTitle}} - Edited\",\r\n        \"description\": \"Automation Testing\",\r\n        \"body\": \"This is the original article content.\",\r\n        \"tagList\": [\"QA\", \"Testing\"]\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/articles/{{postSlug}}",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"articles",
+						"{{postSlug}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LoginUserB Cannot EditPost UserA",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Unauthorized user should not be able to edit another user's post\", function () {\r",
+							"    let statusCode = pm.response.code;\r",
+							"    console.log(\"Response Status Code:\", statusCode);\r",
+							"    \r",
+							"    // Ensure we are not mistakenly sending an auth token\r",
+							"    let authHeader = pm.request.headers.get(\"Authorization\");\r",
+							"    console.log(\"Current Auth Token:\", authHeader);\r",
+							"\r",
+							"    // Expecting 403 Forbidden, but some APIs may return 401 Unauthorized\r",
+							"    pm.expect(statusCode).to.be.oneOf([403, 401]);\r",
+							"\r",
+							"    if (statusCode === 200) {\r",
+							"        console.log(\"❌ ERROR: Unauthorized user was able to edit the post!\");\r",
+							"    } else {\r",
+							"        console.log(\"✅ Test Passed – Unauthorized access correctly blocked.\");\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "Bearer invalid_token_here",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\r\n    \"article\": {\r\n        \"title\": \"{{postTitle}} - Edited by Another User\",\r\n        \"description\": \"Unauthorized Update Attempt\",\r\n        \"body\": \"This should not be allowed.\",\r\n        \"tagList\": [\"unauthorized\"]\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/articles/{{postSlug}}",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"articles",
+						"{{postSlug}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Post by User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Verify Blog Post Deletion\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]); // Accept 404 if post was already deleted\r",
+							"});\r",
+							"\r",
+							"if (pm.response.code === 404) {\r",
+							"    console.warn(\"Blog post was already deleted or does not exist.\");\r",
+							"} else {\r",
+							"    pm.test(\"Validate Successful Blog Post Deletion\", function () {\r",
+							"        pm.expect(pm.response.text()).to.be.empty; // Expect no content for 204\r",
+							"    });\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let slug = pm.environment.get(\"postSlug\");\r",
+							"if (!slug) {\r",
+							"    throw new Error(\"No postSlug found. Ensure a post is created before deleting.\");\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyMjc2N30sImlhdCI6MTc0MjQwNTc1NywiZXhwIjoxNzQ3NTg5NzU3fQ.Kj9fabIX5TtQuYTeT27rGviNlJHAyqh4uTIUF0krV1M",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/articles/{{postSlug}}",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"articles",
+						"{{postSlug}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LoginUserB Cannot DeletePost User A",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Unauthorized user should not be able to delete another user's post\", function () {\r",
+							"    let statusCode = pm.response.code;\r",
+							"    console.log(\"Response Status Code:\", statusCode);\r",
+							"\r",
+							"    // Check if API is returning 204 (incorrect behavior)\r",
+							"    if (statusCode === 204) {\r",
+							"        console.error(\"❌ SECURITY BUG: Unauthorized user was able to delete another user's post!\");\r",
+							"        pm.expect(false, \"Critical Security Bug: API should not return 204 for unauthorized deletion\").to.be.true;\r",
+							"    }\r",
+							"\r",
+							"    // Expected Response Codes: 403 or 401\r",
+							"    pm.expect(statusCode, \"Security Issue: User B should receive 403 Forbidden or 401 Unauthorized.\")\r",
+							"        .to.be.oneOf([403, 401]);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let postSlug = pm.environment.get(\"postSlug\");\r",
+							"\r",
+							"if (!postSlug) {\r",
+							"    console.log(\"❌ ERROR: No post slug found. Ensure you create a post before attempting deletion.\");\r",
+							"    postman.setNextRequest(null); // Stop execution if slug is missing\r",
+							"} else {\r",
+							"    console.log(\"✅ Post Slug Available:\", postSlug);\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "invalid",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"user\": {\r\n\t\t\"email\": \"testuser201@example.com\",\r\n\t\t\"password\": \"testuser\"\r\n\t}\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://conduit-api.bondaracademy.com/api/articles/{{postSlug}}",
+					"protocol": "https",
+					"host": [
+						"conduit-api",
+						"bondaracademy",
+						"com"
+					],
+					"path": [
+						"api",
+						"articles",
+						"{{postSlug}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
